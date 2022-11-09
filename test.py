@@ -11,9 +11,9 @@ Language.set_directory("languages")
 settings = {
     "root_dir": os.getcwd(),
     "tests_dir": "tests",
-    "logs_dir": "logs",
     "sources_dir": "sources",
-    "executables_dir": "executables",
+    "logs_dir": "outputs/logs",
+    "executables_dir": "outputs/executables",
 }
 
 event: EventTester = EventTester("c", settings)
