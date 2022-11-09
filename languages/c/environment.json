@@ -1,0 +1,23 @@
+{
+  "id": "c",
+  "name": "C",
+  "extensions": [".c", ".h"],
+  "dontCompile": [".h"],
+  "compile-flags": ["-Wall", "-Wextra", "-Werror", "-std=c99"],
+  "min-version": "6.0.0",
+  "compiled": true,
+  "environments": {
+    "windows": {
+      "command": { "name": "$file.exe", "args": [] },
+      "compile": { "name": "gcc", "args": ["-o", "$file.exe"] }
+    },
+    "linux": {
+      "command": { "name": "$file", "args": [] },
+      "compile": { "name": "gcc", "args": ["-o", "$file"] }
+    },
+    "macos": {
+      "command": { "name": "$file", "args": [] },
+      "compile": { "name": "gcc", "args": ["-o", "$file"] }
+    }
+  }
+}

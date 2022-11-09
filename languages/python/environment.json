@@ -1,0 +1,19 @@
+{
+  "id": "python",
+  "name": "Python 3",
+  "extensions": [".py"],
+  "dontCompile": [],
+  "compile-flags": [],
+  "min-version": "3.8.0",
+  "compiled": false,
+  "environments": {
+    "windows": {
+      "command": { "name": "python", "args": ["-u"] },
+      "compile": {}
+    },
+    "linux": {
+      "command": { "name": "python3", "args": ["-u"] },
+      "compile": {}
+    }
+  }
+}

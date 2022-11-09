@@ -1,0 +1,87 @@
+[
+  {
+    "name": "Nike Majica",
+    "description": "Provera da li je popust za Nike majicu izracunat kako treba",
+    "directory": "NikeMajica",
+    "skip": false,
+    "points": 2,
+    "time_limit": 1,
+    "streams": {
+      "input": "input",
+      "output": "output"
+    },
+    "files": {
+      "input": [],
+      "output": []
+    },
+    "args": []
+  },
+  {
+    "name": "Adidas Trenerka",
+    "description": "Provera da li je popust za Adidas trenerku izracunat kako treba",
+    "directory": "AdidasTrenerka",
+    "skip": false,
+    "points": 2,
+    "time_limit": 1,
+    "streams": {
+      "input": "input",
+      "output": "output"
+    },
+    "files": {
+      "input": [],
+      "output": []
+    },
+    "args": []
+  },
+  {
+    "name": "CK&Gucci",
+    "description": "Nema opisa",
+    "directory": "CKiGucci",
+    "skip": false,
+    "points": 2,
+    "time_limit": 1,
+    "streams": {
+      "input": "input",
+      "output": "output"
+    },
+    "files": {
+      "input": [],
+      "output": []
+    },
+    "args": []
+  },
+  {
+    "name": "No Discout",
+    "description": "Nema popusta na ove proizvode",
+    "directory": "NoDiscount",
+    "skip": false,
+    "points": 2,
+    "time_limit": 1,
+    "streams": {
+      "input": "input",
+      "output": "output"
+    },
+    "files": {
+      "input": [],
+      "output": []
+    },
+    "args": []
+  },
+  {
+    "name": "Invalid Input",
+    "description": "Nema odgovarajucih proizvoda",
+    "directory": "InvalidInput",
+    "skip": false,
+    "points": 2,
+    "time_limit": 1,
+    "streams": {
+      "input": "input",
+      "output": "output"
+    },
+    "files": {
+      "input": [],
+      "output": []
+    },
+    "args": []
+  }
+]
