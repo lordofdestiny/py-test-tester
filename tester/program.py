@@ -3,6 +3,7 @@ from tester.test_case import TestCase, TestResult, CompilationFailed, ProgramTim
 from subprocess import CalledProcessError, TimeoutExpired, CompletedProcess
 from tester.language import Language
 from io import TextIOWrapper
+from typing import Optional
 import subprocess
 
 
@@ -50,19 +51,25 @@ class Program:
         self.ready = False
         self.command = self.lang.prepare_run(mainFile, self.target_name)
 
-    def run(self, test_case: TestCase) -> TestResult:
+    def run(self, test_case: TestCase, working_dir) -> TestResult:
         try:
-            with open(test_case.istream_name) as istream:
-                istream: TextIOWrapper
-                result: CompletedProcess[str] = subprocess.run(
-                    self.command + test_case.args,
-                    text=True,
-                    check=True,
-                    stdin=istream,
-                    encoding="utf-8",
-                    capture_output=True,
-                    timeout=test_case.time_limit,
-                )
+            istream: Optional[TextIOWrapper] = None
+            if test_case.istream_name is not None:
+                istream = open(test_case.istream_name)
+            result: CompletedProcess[str] = subprocess.run(
+                self.command + test_case.args,
+                text=True,
+                check=True,
+                stdin=istream,
+                cwd=working_dir,
+                encoding="utf-8",
+                capture_output=True,
+                timeout=test_case.time_limit,
+            )
+
+            if istream is not None:
+                istream.close()
+
         except CalledProcessError as error:
             result = error
         except TimeoutExpired as error:
