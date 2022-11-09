@@ -1,12 +1,33 @@
 from __future__ import annotations
 from subprocess import CalledProcessError, TimeoutExpired
-from typing import Any, List, Union
+from typing import Any, List, Union, Optional, NoReturn
 from io import TextIOWrapper
+from itertools import chain
 from operator import eq
 from enum import Enum
 from os import path
 import json
 import os
+
+
+class TestParsingFailed(Exception):
+    def __init__(self, field: str) -> None:
+        self.field: str = field
+
+    def __repr__(self) -> str:
+        return f"Mandatory field '${self.field}' not found in the configuration file!\n"
+
+
+class TestFileMissing(Exception):
+    def __init__(self, file_name: str, stream_name: Optional[str] = None) -> None:
+        self.stream_name: str = stream_name
+        self.file_name: str = file_name
+
+    def __repr__(self) -> str:
+        if self.file_name is None:
+            return f"File '{self.file_name}' not found!"
+        else:
+            return f"File '{self.file_name}' for *{self.stream_name}* not found!*"
 
 
 class TestStatus(Enum):
@@ -42,6 +63,7 @@ class TestResult:
             expected_lines: List[str] = [
                 f"{x}\n" for x in test_case.expected_ostream.split("\n")
             ]
+
             self.points: float = TestResult.calculate_points(
                 test_case.points,
                 output_lines,
@@ -138,7 +160,6 @@ class TestCase:
     def __init__(self, **kwargs) -> None:
         self.name: str = kwargs["name"]
         self.desc: str = kwargs["desc"]
-        self.skip: bool = kwargs["skip"]
         self.points: int = kwargs["points"]
         self.time_limit: float = kwargs["time_limit"]
         self.istream_name: str = kwargs["istream"]
@@ -146,6 +167,16 @@ class TestCase:
         self.ifile_names: List[str] = kwargs["ifiles"]
         self.ofile_names: List[str] = kwargs["ofiles"]
         self.args: List[str] = kwargs["args"]
+
+        if not os.path.exists(self.istream_name):
+            raise TestFileMissing(self.istream_name, "istream")
+        if not os.path.exists(self.ostream_name):
+            raise TestFileMissing(self.ostream_name, "ostream")
+        for file in chain(self.ifile_names, self.ofile_names):
+            if not os.path.exists(file):
+                raise TestFileMissing(file)
+
+        self.expected_ostream: Optional[str] = None
         with open(self.ostream_name, "r", encoding="utf-8") as file:
             file: TextIOWrapper
             self.expected_ostream = file.read()
@@ -170,33 +201,41 @@ class TestCase:
 
     @staticmethod
     def loadTests(test_dir: str) -> List[TestCase]:
-        root: str = path.join(os.getcwd(), test_dir)
-        test_file: str = path.join(root, "tests.json")
+        test_file: str = path.join(test_dir, "tests.json")
 
-        test_data = None
+        test_data: Optional[List[dict[str, Any]]] = None
         with open(test_file, "r") as file:
             file: TextIOWrapper
-            test_data: dict[str, Any] = json.load(file)
+            test_data = json.load(file)
 
-        tests: List[TestCase] = [TestCase.parseTest(root, test) for test in test_data]
-
-        return list(filter(lambda test: not test.skip, tests))
+        return [
+            TestCase.parseTest(test_dir, test)
+            for test in test_data
+            if not test.get("skip", True)
+        ]
 
     @staticmethod
-    def parseTest(root: str, test: dict[str, Any]) -> TestCase:
+    def parseTest(root: str, test: dict[str, Any]) -> TestCase | NoReturn:
+        if "directory" not in test:
+            raise TestParsingFailed("directory")
         dir: str = path.join(root, test["directory"])
-        istream: str = path.join(dir, test["streams"]["input"])
-        ostream: str = path.join(dir, test["streams"]["output"])
-        ifiles: List[str] = [path.join(dir, x) for x in test["files"]["input"]]
-        ofiles: List[str] = [path.join(dir, x) for x in test["files"]["output"]]
+
+        streams: dict[str, str] = test.get("streams", {})
+        istream: Optional[str] = None
+        istream = path.join(dir, streams["input"]) if "input" in streams else None
+        ostream: Optional[str] = None
+        ostream = path.join(dir, streams["output"]) if "output" in streams else None
+
+        files: str = test.get("files", {"input": [], "output": []})
+        ifiles: List[str] = [path.join(dir, x) for x in files.get("input", [])]
+        ofiles: List[str] = [path.join(dir, x) for x in files.get("output", [])]
 
         return TestCase(
-            name=test["name"],
-            desc=test["description"],
-            skip=test["skip"],
-            points=test["points"],
-            time_limit=test["time_limit"],
-            args=test["args"],
+            name=test.get("name", "Unspecified"),
+            desc=test.get("description", "No Description"),
+            points=test.get("points", 1),
+            time_limit=test.get("tile_limit", 1),
+            args=test.get("args", []),
             istream=istream,
             ostream=ostream,
             ifiles=ifiles,
