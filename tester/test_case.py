@@ -145,6 +145,7 @@ class TestCase:
         self.ostream_name: str = kwargs["ostream"]
         self.ifile_names: List[str] = kwargs["ifiles"]
         self.ofile_names: List[str] = kwargs["ofiles"]
+        self.args: List[str] = kwargs["args"]
         with open(self.ostream_name, "r", encoding="utf-8") as file:
             file: TextIOWrapper
             self.expected_ostream = file.read()
@@ -177,12 +178,12 @@ class TestCase:
             file: TextIOWrapper
             test_data: dict[str, Any] = json.load(file)
 
-        tests: List[TestCase] = [TestCase.__praseTest(root, test) for test in test_data]
+        tests: List[TestCase] = [TestCase.parseTest(root, test) for test in test_data]
 
         return list(filter(lambda test: not test.skip, tests))
 
     @staticmethod
-    def __praseTest(root: str, test: dict[str, Any]) -> TestCase:
+    def parseTest(root: str, test: dict[str, Any]) -> TestCase:
         dir: str = path.join(root, test["directory"])
         istream: str = path.join(dir, test["streams"]["input"])
         ostream: str = path.join(dir, test["streams"]["output"])
@@ -195,6 +196,7 @@ class TestCase:
             skip=test["skip"],
             points=test["points"],
             time_limit=test["time_limit"],
+            args=test["args"],
             istream=istream,
             ostream=ostream,
             ifiles=ifiles,

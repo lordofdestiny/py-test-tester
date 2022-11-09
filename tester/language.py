@@ -84,7 +84,7 @@ class Language:
         ]
         return [str.replace("$file", target_name) for str in command]
 
-    def prepare_run(self, mainFile=None, target_name=None):
+    def prepare_run(self, mainFile=None, target_name=None) -> List[str]:
         command: List[str] = [self.command["name"], *self.command["args"]]
         command: List[str] = [str.replace("$file", target_name) for str in command]
         if not self.compiled and mainFile is not None:
@@ -92,7 +92,7 @@ class Language:
         return command
 
     @staticmethod
-    def get_os():
+    def get_os() -> str:
         if sys.platform.startswith("win32"):
             return "windows"
         elif sys.platform.startswith("linux"):

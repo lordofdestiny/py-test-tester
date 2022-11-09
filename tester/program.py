@@ -55,10 +55,10 @@ class Program:
             with open(test_case.istream_name) as istream:
                 istream: TextIOWrapper
                 result: CompletedProcess[str] = subprocess.run(
-                    self.command,
-                    stdin=istream,
+                    self.command + test_case.args,
                     text=True,
                     check=True,
+                    stdin=istream,
                     encoding="utf-8",
                     capture_output=True,
                     timeout=test_case.time_limit,
