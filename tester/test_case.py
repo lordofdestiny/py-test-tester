@@ -59,25 +59,9 @@ class TestResult:
         if isinstance(test_output, ProgramTimeout):
             self.points = 0
         elif self.returncode != CompilationFailed.returncode:
-            output_lines: List[str] = [f"{x}\n" for x in self.stdout.split("\n")]
-            expected_lines: List[str] = [
-                f"{x}\n" for x in test_case.expected_ostream.split("\n")
-            ]
-
-            self.points: float = TestResult.calculate_points(
-                test_case.points,
-                output_lines,
-                expected_lines,
-            )
+            self.points: float = TestResult.calculate_points(test_case, self.stdout)
 
         self.status: TestStatus = self.calculate_status(test_case, test_output)
-        # elif not isinstance(test_output, CompilationFailed):
-        #     self.status: TestStatus = self.calculate_status(test_case, test_output)
-        #     self.points = (
-        #         test_case.points
-        #         if test_case.expected_ostream.strip() in self.stdout.strip()
-        #         else 0
-        #     )
 
     def calculate_status(
         self,
@@ -105,19 +89,24 @@ class TestResult:
         )
 
     @staticmethod
-    def calculate_points(
-        total_points: float,
-        expected: list[str],
-        output: list[str],
-    ) -> float:
-        if len(expected) != len(output):
+    def calculate_points(test: TestCase, output: Optional[str]) -> float:
+        if test.expected_ostream is None:
+            return test.points
+        expected_lines: List[str] = [
+            f"{x}\n" for x in test.expected_ostream.split("\n")
+        ]
+        output_lines: List[str] = [f"{x}\n" for x in output.split("\n")]
+
+        if len(expected_lines) != len(output_lines):
             return 0
 
-        ppl: float = total_points / len(expected)
+        ppl: float = test.points / len(expected_lines)
 
-        points: float = sum(ppl for pair in zip(expected, output) if eq(*pair))
+        points: float = sum(
+            ppl for pair in zip(expected_lines, output_lines) if eq(*pair)
+        )
 
-        if points <= 0.5 * total_points:
+        if points <= 0.5 * test.points:
             return 0
 
         return points
@@ -168,9 +157,9 @@ class TestCase:
         self.ofile_names: List[str] = kwargs["ofiles"]
         self.args: List[str] = kwargs["args"]
 
-        if not os.path.exists(self.istream_name):
+        if self.istream_name is not None and not os.path.exists(self.istream_name):
             raise TestFileMissing(self.istream_name, "istream")
-        if not os.path.exists(self.ostream_name):
+        if self.istream_name is not None and not os.path.exists(self.ostream_name):
             raise TestFileMissing(self.ostream_name, "ostream")
         for file in chain(self.ifile_names, self.ofile_names):
             if not os.path.exists(file):
