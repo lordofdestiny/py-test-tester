@@ -83,5 +83,15 @@
       "output": []
     },
     "args": []
+  },
+  {
+    "Name": "Double Mistake",
+    "description": "Provevri  da li se program oporavlja od dve uzastopne greske pri unosu",
+    "directory": "DoubleMistake",
+    "points": 5,
+    "streams": {
+      "input": "input",
+      "output": "output"
+    }
   }
 ]

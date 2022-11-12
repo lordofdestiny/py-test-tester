@@ -200,7 +200,7 @@ class TestCase:
         return [
             TestCase.parseTest(test_dir, test)
             for test in test_data
-            if not test.get("skip", True)
+            if not test.get("skip", False)
         ]
 
     @staticmethod
