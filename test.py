@@ -2,7 +2,7 @@ from __future__ import annotations
 from tester.spreadsheet import generate_spreadsheet
 from tester.event_tester import EventTester
 from tester.language import Language
-from typing import List
+import xlsxwriter
 import os
 
 
@@ -23,4 +23,7 @@ event.test_all()
 print(f"Testing done! Students tested: {len(event.participants)}")
 path: str = os.path.join(event.logs_dir, "results.xlsx")
 
-generate_spreadsheet(path, event)
+try:
+    generate_spreadsheet(path, event)
+except xlsxwriter.exceptions.FileCreateError:
+    print("Please close the Excel file before running the test script!")
