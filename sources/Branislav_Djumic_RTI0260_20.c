@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include <stdbool.h>
 /*
                 1.          2.          3.              4.
                 Nike        Adidas      CalvinKlein     Gucci
@@ -28,27 +28,23 @@ int main() {
         {2700, 3150, 2800, 3300}
     };
 
-
+    int tip = 0;
+    int brend = 0;
     do {
-        int tip = 0, brend = 0;
         scanf("%d %d", &tip, &brend);
-        int discount = getDiscount(tip, brend);
+        if (validDimension(tip) && validDimension(brend)) break;
+        printf("Izabrane opcije ne postoje, pokusajte ponovo!\n");
+    } while (true);
 
-        if (!validDimension(tip) || !validDimension(brend)) {
-            printf("Izabrane opcije ne postoje, pokusajte ponovo!\n");
-            continue;
-        }
+    int discount = getDiscount(tip, brend);
+    int cena = values[tip - 1][brend - 1];
 
-        int cena = values[tip - 1][brend - 1];
+    if (discount == 0) {
+        printf("Racun je %d dinara.", cena);
+    } else {
+        float discountAmount = (cena * discount) / 100.0;
+        float final = cena - discountAmount;
+        printf("Racun je %.0f dinara, ustedeli ste %.0f dinara.", final, discountAmount);
+    }
 
-        if (discount == 0) {
-            printf("Racun je %d dinara.", cena);
-        } else {
-            float discountAmount = (cena * discount) / 100.0;
-            float final = cena - discountAmount;
-            printf("Racun je %.0f dinara, ustedeli ste %.0f dinara.", final, discountAmount);
-        }
-
-        break;
-    } while (1);
 }
