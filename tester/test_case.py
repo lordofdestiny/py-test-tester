@@ -146,8 +146,11 @@ class ProgramTimeout(TestResult, Exception):
 
 
 class TestCase:
+    name_counter = 0
+
     def __init__(self, **kwargs) -> None:
-        self.name: str = kwargs["name"]
+        new_name: str = TestCase.next_name()
+        self.name: str = new_name if kwargs["name"] is None else kwargs["name"]
         self.desc: str = kwargs["desc"]
         self.points: int = kwargs["points"]
         self.time_limit: float = kwargs["time_limit"]
@@ -170,23 +173,31 @@ class TestCase:
             file: TextIOWrapper
             self.expected_ostream = file.read()
 
+    @classmethod
+    def next_name(cls) -> str:
+        cls.name_counter += 1
+        return f"test_{cls.name_counter}"
+
     def get_report(self, result: TestResult) -> str:
-        if result.status == TestStatus.PASSED:
-            return "Output matches expected output!"
-        elif result.status == TestStatus.ERROR:
-            return (
-                f"Error(code={result.getReturnCode()}) encountered during execution:\n"
-                f"{result.stderr}"
-            )
-        else:
-            return (
-                "Outputs do not match!!!\n"
-                "Expected:\n"
-                f"{self.expected_ostream}\n"
-                f"{'-' * 25}\n"
-                "But received:\n"
-                f"{result.stdout}"
-            )
+        match result.status:
+            case TestStatus.PASSED:
+                return "Output matches expected output."
+            case TestStatus.ERROR:
+                return (
+                    f"Error(code={result.getReturnCode()}) encountered during execution:\n"
+                    f"{result.stderr}"
+                )
+            case TestStatus.FAILED:
+                return (
+                    "Outputs do not match!!!\n"
+                    "Expected:\n"
+                    f"{self.expected_ostream}\n"
+                    f"{'-' * 25}\n"
+                    "But received:\n"
+                    f"{result.stdout}"
+                )
+            case _:
+                return "Test TIMEOUT"
 
     @staticmethod
     def loadTests(test_dir: str) -> List[TestCase]:
@@ -220,7 +231,7 @@ class TestCase:
         ofiles: List[str] = [path.join(dir, x) for x in files.get("output", [])]
 
         return TestCase(
-            name=test.get("name", "Unspecified"),
+            name=test.get("name", None),
             desc=test.get("description", "No Description"),
             points=test.get("points", 1),
             time_limit=test.get("tile_limit", 1),
