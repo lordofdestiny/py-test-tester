@@ -3,7 +3,7 @@ from tester.test_case import TestCase, TestResult, CompilationFailed
 from tester.language import Language
 from tester.program import Program
 from tester.logger import Logger
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import shutil
 import os
 
@@ -104,6 +104,7 @@ class EventTester:
         self.tests_dir: str = os.path.join(root, settings["tests_dir"])
         self.logs_dir: str = os.path.join(root, settings["logs_dir"])
         self.working_dir: str = os.path.join(root, "workdir")
+        self.results_cache: Optional[List[ParticipantSummary]] = None
 
         if not os.path.exists(self.tests_dir):
             raise FileNotFoundError(self.tests_dir)
@@ -176,4 +177,6 @@ class EventTester:
                 logger.log(f"Error: {error}")
 
     def get_results(self) -> List[ParticipantSummary]:
-        return list(map(ParticipantSummary, self.participants))
+        if self.results_cache is None:
+            self.results_cache = list(map(ParticipantSummary, self.participants))
+        return self.results_cache
