@@ -13,7 +13,7 @@
     },
     "linux": {
       "command": { "name": "$file", "args": [] },
-      "compile": { "name": "gcc", "args": ["-o", "$file"] }
+      "compile": { "name": "clang", "args": ["-o", "$file"] }
     },
     "macos": {
       "command": { "name": "$file", "args": [] },
