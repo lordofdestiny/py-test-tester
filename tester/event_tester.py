@@ -47,6 +47,9 @@ class Participant:
             executables_dir,
             f"{Participant.unique_name(self)}",
         )
+        self.compilation_success: Optional[bool] = None
+        # make use of this later
+        self.compilation_result: Optional[CompilationFailed] = None
 
         self.logs_file = os.path.join(
             logs_dir,
@@ -92,10 +95,14 @@ class ParticipantSummary:
         self.successes: int = participant.get_successes()
         self.points: float = participant.get_points()
         self.results: List[TestResult] = participant.results
+        # Refactro this later
+        self.compilation_success: Optional[bool] = participant.compilation_success
 
 
 class EventTester:
-    def __init__(self, langid: str, settings: dict[str, str]) -> None:
+    def __init__(
+        self, langid: str, settings: dict[str, str], compile_only=False
+    ) -> None:
         self.langugage: Language = Language.get(langid)
         root = os.path.abspath(settings["root_dir"])
         self.root_dir: str = root
@@ -105,11 +112,12 @@ class EventTester:
         self.logs_dir: str = os.path.join(root, settings["logs_dir"])
         self.working_dir: str = os.path.join(root, "workdir")
         self.results_cache: Optional[List[ParticipantSummary]] = None
+        self.compile_only = compile_only
 
-        if not os.path.exists(self.tests_dir):
+        if not compile_only and not os.path.exists(self.tests_dir):
             raise FileNotFoundError(self.tests_dir)
 
-        self.tests: List[TestCase] = TestCase.loadTests(self.tests_dir)
+        self.tests: List[TestCase] = TestCase.loadTests(self.tests_dir, compile_only)
 
         if not os.path.exists(self.sources_dir):
             raise FileNotFoundError(self.sources_dir)
@@ -140,41 +148,45 @@ class EventTester:
     def test_all(self) -> None:
         if not os.path.exists(self.working_dir):
             os.makedirs(self.working_dir, exist_ok=True)
+
         with os.scandir(self.working_dir) as entries:
             for entry in entries:
                 if entry.is_dir() and not entry.is_symlink():
                     shutil.rmtree(entry.path)
                 else:
                     os.remove(entry.path)
+
         for participant in self.participants:
             self.test_participant(participant)
 
         shutil.rmtree(self.working_dir)
 
     def test_participant(self, participant: Participant):
-        try:
-            program = Program(
-                self.langugage,
-                [participant.source_file],
-                participant.source_file,
-                participant.executable_file,
-            )
-            with Logger(participant.logs_file) as logger:
-                logger: Logger
+        logger: Logger
+        with Logger(participant.logs_file) as logger:
+            program: Program = None
+            try:
+                program = Program(
+                    self.langugage,
+                    [participant.source_file],
+                    participant.source_file,
+                    participant.executable_file,
+                )
+                participant.compilation_success = True
+            except CompilationFailed as error:
+                participant.results = [TestResult(test, error) for test in self.tests]
+                participant.compilation_success = False
+                logger.log(f"Compilation failed! Error:\n {error}")
 
+            if program is not None and not self.compile_only:
                 runner = TestRunner(program, participant.working_dir, logger)
                 participant.results: List[TestResult] = runner.run_all(self.tests)
                 successes: int = participant.get_successes()
                 points: float = participant.get_points()
                 logger.log(f"{successes}/{len(self.tests)} tests passed!")
                 logger.log(f"Total grade: " f"{points:.2f}")
-
-        except CompilationFailed as error:
-            participant.results = [TestResult(test, error) for test in self.tests]
-            with Logger(participant.logs_file) as logger:
-                logger: Logger
-                logger.log(f"Compilation failed!")
-                logger.log(f"Error: {error}")
+            elif self.compile_only:
+                logger.log("Compilation only mode, skipping tests")
 
     def get_results(self) -> List[ParticipantSummary]:
         if self.results_cache is None:

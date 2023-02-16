@@ -51,31 +51,38 @@ class Spreadsheet:
         self.worksheet.merge_range(0, 1, 2, 1, "Name", self.header_fmt)
         col = 2
 
-        for test in self.event.tests:
-            self.worksheet.merge_range(
-                *[1, col, 1, col + 1],
-                test.name,
-                self.test_name_cell,
-            )
-            self.worksheet.write(2, col, "Status", self.value_header_cell)
-            self.worksheet.write(2, col + 1, "Points", self.value_header_cell)
-            col += 2
+        if not self.event.compile_only:
+            for test in self.event.tests:
+                self.worksheet.merge_range(
+                    *[1, col, 1, col + 1],
+                    test.name,
+                    self.test_name_cell,
+                )
+                self.worksheet.write(2, col, "Status", self.value_header_cell)
+                self.worksheet.write(2, col + 1, "Points", self.value_header_cell)
+                col += 2
 
-        self.worksheet.merge_range(
-            *[0, 2, 0, col - 1],
-            "Testovi",
-            self.header_fmt,
-        )
-        self.worksheet.merge_range(
-            *[0, col, 2, col],
-            "Passed",
-            self.header_fmt,
-        )
-        self.worksheet.merge_range(
-            *[0, col + 1, 2, col + 1],
-            "Total Points",
-            self.header_fmt,
-        )
+            self.worksheet.merge_range(
+                *[0, 2, 0, col - 1],
+                "Testovi",
+                self.header_fmt,
+            )
+            self.worksheet.merge_range(
+                *[0, col, 2, col],
+                "Passed",
+                self.header_fmt,
+            )
+            self.worksheet.merge_range(
+                *[0, col + 1, 2, col + 1],
+                "Total Points",
+                self.header_fmt,
+            )
+        else:
+            self.worksheet.merge_range(
+                *[0, col, 2, col + 1],
+                "Compiled Successfully",
+                self.header_fmt,
+            )
         self.worksheet.set_column(1, 1, 20)
         self.row = 3
 
@@ -96,6 +103,8 @@ class Spreadsheet:
         )
 
     def set_test_state_formats(self, col):
+        if self.event.compile_only:
+            return
         self.test_state_format(self.row, col + 1, "PASSED", self.green_cell_style)
         self.test_state_format(self.row, col + 1, "FAILED", self.orange_cell_style)
         self.test_state_format(self.row, col + 1, "ERROR", self.red_cell_style)
@@ -120,7 +129,7 @@ class Spreadsheet:
             },
         )
         self.worksheet.conditional_format(
-            *[3, col + 1, row - 1, col + 1],
+            *[3, col + 1, row - 1, col + 2],
             {
                 "type": "formula",
                 "criteria": "True",
@@ -128,7 +137,7 @@ class Spreadsheet:
             },
         )
         self.worksheet.conditional_format(
-            *[3, 1, row - 1, col],
+            *[3, 1, row - 1, col + 2],
             {
                 "type": "formula",
                 "criteria": "True",
@@ -174,19 +183,26 @@ class Spreadsheet:
                 ),
             )
             col += 2
+        if not self.event.compile_only:
+            self.worksheet.write_number(
+                *[self.row, col],
+                student.successes,
+                self.format(self.center_style | self.result_style),
+            )
+            self.worksheet.write_number(
+                *[self.row, col + 1],
+                student.points,
+                self.format(self.center_style | self.result_style),
+            )
+        else:
+            self.worksheet.merge_range(
+                *[self.row, col, self.row, col + 1],
+                "Yes" if student.compilation_success else "No",
+                self.format(
+                    self.center_style | self.result_style | {"align": "center"}
+                ),
+            )
 
-        self.worksheet.write_number(
-            *[self.row, col],
-            student.successes,
-            self.format(self.center_style | self.result_style | {"align": "center"}),
-        )
-        self.worksheet.write_number(
-            *[self.row, col + 1],
-            student.points,
-            self.format(
-                self.center_style | self.result_style | {"align": "right", "indent": 1}
-            ),
-        )
         self.row += 1
 
     def fill(self):

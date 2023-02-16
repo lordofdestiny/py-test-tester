@@ -200,7 +200,13 @@ class TestCase:
                 return "Test TIMEOUT"
 
     @staticmethod
-    def loadTests(test_dir: str) -> List[TestCase]:
+    def loadTests(
+        test_dir: str,
+        compile_only: bool = False,
+    ) -> List[TestCase]:
+        if compile_only:
+            return []
+
         test_file: str = path.join(test_dir, "tests.json")
 
         test_data: Optional[List[dict[str, Any]]] = None
