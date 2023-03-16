@@ -16,7 +16,7 @@ settings = {
     "executables_dir": "outputs/executables",
 }
 
-event: EventTester = EventTester("c", settings)
+event: EventTester = EventTester("c", settings, compile_only=True)
 event.test_all()
 
 

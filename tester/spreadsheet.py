@@ -129,7 +129,7 @@ class Spreadsheet:
             },
         )
         self.worksheet.conditional_format(
-            *[3, col + 1, row - 1, col + 2],
+            *[3, col + 1, row - 1, col + 1],
             {
                 "type": "formula",
                 "criteria": "True",
@@ -137,7 +137,7 @@ class Spreadsheet:
             },
         )
         self.worksheet.conditional_format(
-            *[3, 1, row - 1, col + 2],
+            *[3, 1, row - 1, col + 1],
             {
                 "type": "formula",
                 "criteria": "True",
@@ -199,7 +199,14 @@ class Spreadsheet:
                 *[self.row, col, self.row, col + 1],
                 "Yes" if student.compilation_success else "No",
                 self.format(
-                    self.center_style | self.result_style | {"align": "center"}
+                    self.center_style
+                    | {"bold": True}
+                    | {"color": "#000000"}
+                    | (
+                        self.green_cell_style
+                        if student.compilation_success
+                        else self.red_cell_style
+                    )
                 ),
             )
 
